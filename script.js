@@ -8,6 +8,9 @@ let timerInterval = null;
 async function fetchSchedule() {
     try {
         const response = await fetch(API_URL);
+        if (!response.ok) {
+            throw new Error(`HTTP ошибка: ${response.status}`);
+        }
         const data = await response.json();
         
         const parsed = parseSchedules(data);
@@ -21,7 +24,7 @@ async function fetchSchedule() {
             renderGraph('scheduleGrid', {}, true); 
         }
 
-        // Отрисовка графика на завтра, если он уже есть в JSON
+        // Отрисовка графика на завтра
         const tomorrowBlock = document.getElementById('tomorrowBlock');
         if (parsed.tomorrow && tomorrowBlock) {
             scheduleTomorrow = parsed.tomorrow;
@@ -32,52 +35,48 @@ async function fetchSchedule() {
         }
 
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
+        console.error('Детали ошибки:', error);
         document.getElementById('timerStatusText').innerText = 'Ошибка сети';
     }
 }
 
-// Разделение данных на "Сегодня" и "Завтра" по временным меткам
+// Универсальный поиск всех дней для группы 4.1
 function parseSchedules(data) {
-    const factData = data?.fact?.data;
-    if (!factData) return { today: null, tomorrow: null };
+    let foundDays = [];
 
-    const timestamps = Object.keys(factData).map(Number).sort((a, b) => a - b);
-    
-    // Начало сегодняшнего дня (00:00:00) в секундах
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const todayTs = Math.floor(startOfToday.getTime() / 1000);
-
-    let todayData = null;
-    let tomorrowData = null;
-
-    for (const ts of timestamps) {
-        const groupObj = factData[ts.toString()]?.['GPV4.1'] || factData[ts.toString()]?.['4.1'];
-        if (!groupObj) continue;
-
-        // Сравниваем метку с началом сегодняшнего дня (с допуском 3 часа на часовые пояса)
-        if (Math.abs(ts - todayTs) < 10800) {
-            todayData = groupObj;
-        } else if (ts > todayTs) {
-            tomorrowData = groupObj;
+    function search(obj, currentKey = '') {
+        if (!obj || typeof obj !== 'object') return;
+        
+        if (obj['GPV4.1'] || obj['4.1']) {
+            foundDays.push({
+                key: Number(currentKey) || 0,
+                schedule: obj['GPV4.1'] || obj['4.1']
+            });
+            return;
+        }
+        
+        for (let key in obj) {
+            search(obj[key], key);
         }
     }
 
-    // Запасной вариант, если метки не совпали по поясу: берём первый и второй ключи
-    if (!todayData && timestamps.length > 0) {
-        const firstKey = timestamps[0].toString();
-        todayData = factData[firstKey]?.['GPV4.1'] || factData[firstKey]?.['4.1'];
-        if (timestamps.length > 1) {
-            const secondKey = timestamps[1].toString();
-            tomorrowData = factData[secondKey]?.['GPV4.1'] || factData[secondKey]?.['4.1'];
-        }
+    search(data);
+
+    // Сортируем найденные дни по возрастанию даты (timestamp)
+    foundDays.sort((a, b) => a.key - b.key);
+
+    if (foundDays.length === 0) {
+        return { today: null, tomorrow: null };
     }
 
-    return { today: todayData, tomorrow: tomorrowData };
+    // Если найден 1 день — это сегодня; если 2 и больше — берём первый и второй
+    return {
+        today: foundDays[0].schedule,
+        tomorrow: foundDays.length > 1 ? foundDays[1].schedule : null
+    };
 }
 
-// 2. Универсальная отрисовка любого графика (24 часа)
+// 2. Отрисовка графика (24 часа)
 function renderGraph(containerId, dayData, allDayOn = false) {
     const grid = document.getElementById(containerId);
     if (!grid) return;
@@ -117,7 +116,7 @@ function renderGraph(containerId, dayData, allDayOn = false) {
     }
 }
 
-// 3. Логика таймера и текста (работает по графику на сегодня)
+// 3. Логика таймера и текста
 function startTimerLogic() {
     const now = new Date();
     const currentHour = now.getHours();
