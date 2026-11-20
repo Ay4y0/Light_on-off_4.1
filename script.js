@@ -1,47 +1,71 @@
-// Берем данные из ОРИГИНАЛЬНОГО репозитория автора (Baskerville42)
 const API_URL = 'https://githubusercontent.com' + Date.now();
 
-let scheduleData = {};
+let scheduleToday = {};
 let timerInterval = null;
 
-// 1. Загрузка данных
 async function fetchSchedule() {
     try {
         const response = await fetch(API_URL);
+        if (!response.ok) {
+            throw new Error('Ошибка HTTP: ' + response.status);
+        }
         const data = await response.json();
         
-        const groupData = findGroupData(data);
+        const days = findAllDays(data);
 
-        if (groupData) {
-            scheduleData = groupData;
-            renderGraph();
+        if (days.length > 0) {
+            // Первый день — Сегодня
+            scheduleToday = days.at(0).schedule;
+            renderGraph('scheduleGrid', scheduleToday);
             startTimerLogic();
+
+            // Второй день — Завтра (если уже появился в JSON)
+            const tomorrowBlock = document.getElementById('tomorrowBlock');
+            if (days.length > 1 && tomorrowBlock) {
+                tomorrowBlock.style.display = 'block';
+                renderGraph('scheduleGridTomorrow', days.at(1).schedule);
+            } else if (tomorrowBlock) {
+                tomorrowBlock.style.display = 'none';
+            }
         } else {
             document.getElementById('timerStatusText').innerText = 'Данные не найдены';
-            renderGraph(true); 
+            renderGraph('scheduleGrid', {}, true); 
         }
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
+        console.error('Ошибка:', error);
         document.getElementById('timerStatusText').innerText = 'Ошибка сети';
     }
 }
 
-// Функция для поиска группы 4.1 на любой глубине JSON
-function findGroupData(obj) {
-    if (!obj || typeof obj !== 'object') return null;
-    if (obj['GPV4.1']) return obj['GPV4.1'];
-    if (obj['4.1']) return obj['4.1'];
-    
-    for (let key in obj) {
-        const result = findGroupData(obj[key]);
-        if (result) return result;
+// Поиск всех дней для группы 4.1 с сортировкой по дате
+function findAllDays(data) {
+    let result = [];
+
+    function traverse(obj, keyName) {
+        if (!obj || typeof obj !== 'object') return;
+        
+        if (obj['GPV4.1']) {
+            result.push({ ts: Number(keyName) || 0, schedule: obj['GPV4.1'] });
+            return;
+        }
+        if (obj['4.1']) {
+            result.push({ ts: Number(keyName) || 0, schedule: obj['4.1'] });
+            return;
+        }
+        
+        for (let key in obj) {
+            traverse(obj[key], key);
+        }
     }
-    return null;
+
+    traverse(data, '');
+    result.sort((a, b) => a.ts - b.ts);
+    return result;
 }
 
-// 2. Отрисовка графика (24 часа)
-function renderGraph(allDayOn = false) {
-    const grid = document.getElementById('scheduleGrid');
+function renderGraph(gridId, daySchedule, allDayOn = false) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
     grid.innerHTML = '';
 
     for (let i = 1; i <= 24; i++) {
@@ -60,7 +84,7 @@ function renderGraph(allDayOn = false) {
         if (allDayOn) {
             status.classList.add('hour_active');
         } else {
-            const hourStatus = scheduleData[i.toString()];
+            const hourStatus = daySchedule[i.toString()];
             if (hourStatus === 'yes') {
                 status.classList.add('hour_active');
             } else if (hourStatus === 'first') {
@@ -78,7 +102,6 @@ function renderGraph(allDayOn = false) {
     }
 }
 
-// 3. Логика таймера и текста
 function startTimerLogic() {
     const now = new Date();
     const currentHour = now.getHours();
@@ -89,8 +112,7 @@ function startTimerLogic() {
     let nextEventHour = null;
     let nextEventMinute = 0;
 
-    // Проверяем, есть ли свет прямо сейчас
-    const currentStatus = scheduleData[jsonHour.toString()];
+    const currentStatus = scheduleToday[jsonHour.toString()];
     if (currentStatus === 'no') {
         isCurrentlyOff = true;
     } else if (currentStatus === 'first' && currentMinute < 30) {
@@ -99,9 +121,8 @@ function startTimerLogic() {
         isCurrentlyOff = true;
     }
 
-    // Ищем ближайшее событие
     for (let i = currentHour; i < 24; i++) {
-        const status = scheduleData[(i + 1).toString()];
+        const status = scheduleToday[(i + 1).toString()];
         if (!status) continue;
 
         if (!isCurrentlyOff) { 
@@ -119,17 +140,15 @@ function startTimerLogic() {
         }
     }
 
-    const statusTextEl = document.getElementById('timerStatusText'); // Верхняя строка (span)
-    const nextTextEl = document.getElementById('timerNextText');     // Нижняя строка (b)
+    const statusTextEl = document.getElementById('timerStatusText');
+    const nextTextEl = document.getElementById('timerNextText');
     const timerBox = document.getElementById('timerBox');
 
-    // Формируем время (например, 17:30)
     let timeString = "";
     if (nextEventHour !== null) {
         timeString = `${nextEventHour.toString().padStart(2, '0')}:${nextEventMinute.toString().padStart(2, '0')}`;
     }
 
-    // Устанавливаем новые тексты
     if (isCurrentlyOff) {
         nextTextEl.innerText = nextEventHour !== null ? `Свет появится в ${timeString}` : 'Ожидаем график';
         statusTextEl.innerText = 'Включение через:';
@@ -155,7 +174,6 @@ function startTimerLogic() {
     updateCountdown(targetDate);
 }
 
-// 4. Обратный отсчет (часы, минуты, секунды)
 function updateCountdown(targetDate) {
     const now = new Date();
     const diff = targetDate - now;
@@ -175,6 +193,5 @@ function updateCountdown(targetDate) {
     document.getElementById('timerSeconds').innerText = seconds.toString().padStart(2, '0');
 }
 
-// Запуск
 fetchSchedule();
 setInterval(fetchSchedule, 10 * 60 * 1000);
