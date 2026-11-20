@@ -135,8 +135,8 @@ function startTimerLogic() {
         statusTextEl.innerText = 'Включення через:';
         timerBox.style.border = "2px solid #ffd52d";
     } else {
-        statusTextEl.innerText = 'Відключення через:';
         nextTextEl.innerText = nextEventHour !== null ? `Світло зникне о ${timeString}` : 'Більше відключень не буде';
+        statusTextEl.innerText = 'Відключення через:';
         timerBox.style.border = "2px solid #4dd58e";
     }
 
