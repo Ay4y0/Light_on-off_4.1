@@ -1,0 +1,232 @@
+/* Базовые стили и темная тема из старого дизайна */
+@font-face {
+    font-family: 'TTFirsNeue';
+    src: url('fonts/TTFirsNeue-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'TTFirsNeue';
+    src: url('fonts/TTFirsNeue-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'TTFirsNeue';
+    src: url('fonts/TTFirsNeue-ExtraLight.woff2') format('woff2');
+    font-weight: 100;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'TTFirsNeue';
+    src: url('fonts/TTFirsNeue-DemiBold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'TTFirsNeue', sans-serif;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Темная тема */
+body.dark {
+    background-color: #09232f;
+    color: #dae6ec;
+}
+
+body.dark header {
+    background-color: #09232f;
+    background-image: url('img/header_bg.png');
+    background-size: 100% auto;
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    padding-bottom: 40px;
+}
+
+.container {
+    width: 80%;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.logo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 20px;
+    margin-bottom: 40px;
+}
+
+.logo_image {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+}
+.logo_image img {
+    width: 46px;
+    margin-right: 16px;
+}
+.logo_text {
+    display: flex;
+    flex-direction: column;
+}
+.logo_big_text { font-size: 20px; font-weight: 700; }
+.logo_small_text { font-size: 16px; font-weight: 100; }
+
+.reg_logo {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    background: #233a45;
+    color: #dae6ec;
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+.reg_logo img { margin-right: 4px; width: 14px; }
+
+.main_header {
+    margin: 32px auto;
+    font-size: 42px;
+    font-weight: 500;
+    text-align: center;
+}
+.main_header span { color: #dae6ec; }
+
+.main_select_header {
+    color: #b0c9d6;
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+/* Таймер (Старый дизайн) */
+.ch_timer_wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 60px;
+}
+
+.ch_timer {
+    padding: 12px 12px 12px 20px;
+    gap: 20px;
+    border-radius: 20px;
+    background-color: #1e333d;
+    display: inline-flex;
+    justify-content: space-between;
+    align-items: center;
+    border: none;
+}
+
+.ch_timer_text span {
+    display: block;
+    font-size: 16px;
+    color: #89a0a8;
+    margin-bottom: 4px;
+}
+.ch_timer_text b {
+    display: block;
+    font-size: 28px;
+    font-weight: 500;
+    color: #fff;
+}
+
+.ch_timer_time {
+    display: flex;
+    gap: 8px;
+}
+
+.timer_hour, .timer_min, .timer_sec {
+    padding: 10px;
+    border-radius: 12px;
+    background-color: #4e6672;
+    color: #fff;
+    min-width: 80px;
+    text-align: center;
+}
+
+.timer_num {
+    font-size: 38px;
+    font-weight: 500;
+    display: block;
+}
+.timer_num_info {
+    font-size: 14px;
+    font-weight: 100;
+}
+
+/* График */
+.ch_day_title {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 500;
+    margin: 40px 0 30px;
+}
+
+.scale_hours {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 2px;
+    margin-bottom: 20px;
+}
+
+.scale_hours_el {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hour_info {
+    font-size: 12px;
+    color: #708996;
+    margin-bottom: 8px;
+}
+
+.hour_status {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    width: 100%;
+    border-radius: 4px;
+    background-color: #243b47; /* Нет света */
+}
+
+.hour_active {
+    background-color: #ffd52d; /* Есть свет */
+}
+
+.periods_items span {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    color: #89a0a8;
+}
+.periods_items span i {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+    margin-right: 6px;
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 768px) {
+    .container { width: 95%; }
+    .main_header { font-size: 28px; }
+    .ch_timer { flex-direction: column; padding: 20px; }
+    .ch_timer_text { text-align: center; margin-bottom: 15px; }
+    .timer_hour, .timer_min, .timer_sec { min-width: 65px; padding: 8px; }
+    .timer_num { font-size: 28px; }
+    
+    /* На мобильных сетку 24 часов лучше немного сжать или сделать горизонтальный скролл */
+    .scale_hours { gap: 1px; }
+    .hour_info { font-size: 9px; transform: rotate(-45deg); margin-bottom: 15px; margin-top: 10px; }
+    .hour_status { height: 30px; }
+}
