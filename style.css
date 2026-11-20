@@ -54,7 +54,7 @@ body.dark header {
 
 .logo {
     display: flex;
-    justify-content: flex-start; /* Логотип теперь слева, так как правую плашку убрали */
+    justify-content: center; /* Логотип теперь слева, так как правую плашку убрали */
     align-items: center;
     padding-top: 20px;
     margin-bottom: 40px;
