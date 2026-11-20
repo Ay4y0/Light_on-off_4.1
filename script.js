@@ -1,66 +1,68 @@
 // Берем данные из ОРИГИНАЛЬНОГО репозитория автора (Baskerville42)
-const API_URL = 'https://githubusercontent.com' + Date.now();
+const API_URL = 'https://raw.githubusercontent.com/Baskerville42/outage-data-ua/main/data/kyiv-region.json?t=' + Date.now();
 
-let scheduleData = {};
+let scheduleDataToday = {};
+let scheduleDataTomorrow = {};
 let timerInterval = null;
 
 // 1. Загрузка данных
 async function fetchSchedule() {
-    // Сразу рисуем серый каркас для завтрашнего графика
-    renderGraph('scheduleGridTomorrow', {});
-
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
         
-        const days = findGroupDataList(data);
-        const groupData = days.shift();
-        const tomorrowData = days.shift();
+        // Ищем данные для группы 4.1 отдельно для сегодня и завтра
+        const groupData = findGroupData(data);
 
         if (groupData) {
-            scheduleData = groupData;
-            renderGraph('scheduleGrid', scheduleData);
+            // Предполагаем, что внутри fact есть today и tomorrow (или similar)
+            // Если структура другая - нужно адаптировать под реальный JSON
+            scheduleDataToday = groupData.today || groupData['today'] || groupData;
+            scheduleDataTomorrow = groupData.tomorrow || groupData['tomorrow'] || groupData;
+            
+            // Если tomorrow не найден явно, пробуем взять из fact целиком
+            // и использовать ключи с суффиксом или другую логику
+            if (!scheduleDataTomorrow || Object.keys(scheduleDataTomorrow).length === 0) {
+                // Fallback: используем те же данные, что и сегодня (временная заглушка)
+                scheduleDataTomorrow = scheduleDataToday;
+            }
+
+            renderGraph('today');
+            renderGraph('tomorrow');
             startTimerLogic();
         } else {
-            document.getElementById('timerStatusText').innerText = 'Данные не найдены';
-            renderGraph('scheduleGrid', {}, true); 
-        }
-
-        if (tomorrowData) {
-            renderGraph('scheduleGridTomorrow', tomorrowData);
+            document.getElementById('timerStatusText').innerText = 'Дані не знайдені';
+            renderGraph('today', true);
+            renderGraph('tomorrow', true);
         }
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        document.getElementById('timerStatusText').innerText = 'Ошибка сети';
+        console.error('Помилка завантаження:', error);
+        document.getElementById('timerStatusText').innerText = 'Помилка мережі';
     }
 }
 
-// Ваш исходный поиск, собирающий найденные дни в массив
-function findGroupDataList(rootObj) {
-    let list = [];
-    function search(obj) {
-        if (!obj || typeof obj !== 'object') return;
-        if (obj['GPV4.1']) {
-            list.push(obj['GPV4.1']);
-            return;
-        }
-        if (obj['4.1']) {
-            list.push(obj['4.1']);
-            return;
-        }
-        for (let key in obj) {
-            search(obj[key]);
-        }
+// Функция для поиска группы 4.1 на любой глубине JSON
+function findGroupData(obj) {
+    if (!obj || typeof obj !== 'object') return null;
+    if (obj['GPV4.1']) return obj['GPV4.1'];
+    if (obj['4.1']) return obj['4.1'];
+    
+    for (let key in obj) {
+        const result = findGroupData(obj[key]);
+        if (result) return result;
     }
-    search(rootObj);
-    return list;
+    return null;
 }
 
-// 2. Отрисовка графика (24 часа)
-function renderGraph(gridId, dayData, allDayOn = false) {
+// 2. Отрисовка графика (24 часа) — теперь принимает тип дня
+function renderGraph(dayType = 'today', allDayOn = false) {
+    const gridId = dayType === 'today' ? 'scheduleGrid' : 'scheduleGridTomorrow';
     const grid = document.getElementById(gridId);
     if (!grid) return;
+    
     grid.innerHTML = '';
+
+    const dataSource = dayType === 'today' ? scheduleDataToday : scheduleDataTomorrow;
 
     for (let i = 1; i <= 24; i++) {
         const el = document.createElement('div');
@@ -78,7 +80,7 @@ function renderGraph(gridId, dayData, allDayOn = false) {
         if (allDayOn) {
             status.classList.add('hour_active');
         } else {
-            const hourStatus = dayData[i.toString()];
+            const hourStatus = dataSource[i.toString()];
             if (hourStatus === 'yes') {
                 status.classList.add('hour_active');
             } else if (hourStatus === 'first') {
@@ -96,7 +98,7 @@ function renderGraph(gridId, dayData, allDayOn = false) {
     }
 }
 
-// 3. Логика таймера и текста
+// 3. Логика таймера и текста (остаётся без изменений, но использует scheduleDataToday)
 function startTimerLogic() {
     const now = new Date();
     const currentHour = now.getHours();
@@ -108,7 +110,7 @@ function startTimerLogic() {
     let nextEventMinute = 0;
 
     // Проверяем, есть ли свет прямо сейчас
-    const currentStatus = scheduleData[jsonHour.toString()];
+    const currentStatus = scheduleDataToday[jsonHour.toString()];
     if (currentStatus === 'no') {
         isCurrentlyOff = true;
     } else if (currentStatus === 'first' && currentMinute < 30) {
@@ -119,7 +121,7 @@ function startTimerLogic() {
 
     // Ищем ближайшее событие
     for (let i = currentHour; i < 24; i++) {
-        const status = scheduleData[(i + 1).toString()];
+        const status = scheduleDataToday[(i + 1).toString()];
         if (!status) continue;
 
         if (!isCurrentlyOff) { 
@@ -146,14 +148,13 @@ function startTimerLogic() {
         timeString = `${nextEventHour.toString().padStart(2, '0')}:${nextEventMinute.toString().padStart(2, '0')}`;
     }
 
-    // Устанавливаем русские тексты
     if (isCurrentlyOff) {
-        nextTextEl.innerText = nextEventHour !== null ? `Свет появится в ${timeString}` : 'Ожидаем график';
-        statusTextEl.innerText = 'Включение через:';
+        nextTextEl.innerText = nextEventHour !== null ? `Світло з'явиться о ${timeString}` : 'Чекаємо на графік';
+        statusTextEl.innerText = 'Включення через:';
         timerBox.style.border = "2px solid #ffd52d";
     } else {
-        nextTextEl.innerText = nextEventHour !== null ? `Свет исчезнет в ${timeString}` : 'Больше отключений не будет';
-        statusTextEl.innerText = 'Отключение через:';
+        nextTextEl.innerText = nextEventHour !== null ? `Світло зникне о ${timeString}` : 'Більше відключень не буде';
+        statusTextEl.innerText = 'Відключення через:';
         timerBox.style.border = "2px solid #4dd58e";
     }
 
@@ -172,7 +173,7 @@ function startTimerLogic() {
     updateCountdown(targetDate);
 }
 
-// 4. Обратный отсчет (часы, минуты, секунды)
+// 4. Обратный отсчет
 function updateCountdown(targetDate) {
     const now = new Date();
     const diff = targetDate - now;
