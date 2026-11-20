@@ -133,7 +133,7 @@ function startTimerLogic() {
     if (isCurrentlyOff) {
         statusTextEl.innerText = 'Включення через:';
         nextTextEl.innerText = nextEventHour !== null ? `Світло з'явиться о ${timeString}` : 'Чекаємо на графік';
-        timerBox.style.border = "2px solid #ff756d";
+        timerBox.style.border = "2px solid #ffd52d";
     } else {
         statusTextEl.innerText = 'Відключення через:';
         nextTextEl.innerText = nextEventHour !== null ? `Світло зникне о ${timeString}` : 'Більше відключень не буде';
