@@ -133,7 +133,7 @@ function startTimerLogic() {
         return;
     }
 
-    nextTextEl.innerText = `О ${nextEventHour.toString().padStart(2, '0')}:${nextEventMinute.toString().padStart(2, '0')}`;
+    nextTextEl.innerText = `о ${nextEventHour.toString().padStart(2, '0')}:${nextEventMinute.toString().padStart(2, '0')}`;
 
     const targetDate = new Date();
     targetDate.setHours(nextEventHour, nextEventMinute, 0, 0);
