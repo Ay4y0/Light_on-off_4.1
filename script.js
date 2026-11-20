@@ -1,8 +1,8 @@
 // Берем данные из ОРИГИНАЛЬНОГО репозитория автора (Baskerville42)
 const API_URL = 'https://raw.githubusercontent.com/Baskerville42/outage-data-ua/main/data/kyiv-region.json?t=' + Date.now();
 
-let scheduleDataToday = {};
-let scheduleDataTomorrow = {};
+let scheduleDataToday = null;
+let scheduleDataTomorrow = null;
 let timerInterval = null;
 
 // 1. Загрузка данных
@@ -10,23 +10,27 @@ async function fetchSchedule() {
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
-        
-        // Ищем данные для группы 4.1 отдельно для сегодня и завтра
-        const groupData = findGroupData(data);
 
-        if (groupData) {
-            // Предполагаем, что внутри fact есть today и tomorrow (или similar)
-            // Если структура другая - нужно адаптировать под реальный JSON
-            scheduleDataToday = groupData.today || groupData['today'] || groupData;
-            scheduleDataTomorrow = groupData.tomorrow || groupData['tomorrow'] || groupData;
-            
-            // Если tomorrow не найден явно, пробуем взять из fact целиком
-            // и использовать ключи с суффиксом или другую логику
-            if (!scheduleDataTomorrow || Object.keys(scheduleDataTomorrow).length === 0) {
-                // Fallback: используем те же данные, что и сегодня (временная заглушка)
-                scheduleDataTomorrow = scheduleDataToday;
-            }
+        const fact = data.fact;
+        if (!fact || !fact.data) {
+            document.getElementById('timerStatusText').innerText = 'Дані не знайдені';
+            renderGraph('today', true);
+            renderGraph('tomorrow', true);
+            return;
+        }
 
+        // Ключи-таймстемпы, отсортированные по возрастанию
+        const timestamps = Object.keys(fact.data).map(Number).sort((a, b) => a - b);
+        const todayTs = Number(fact.today);
+        const tomorrowTs = timestamps.find(ts => ts > todayTs);
+
+        const todayObj = fact.data[String(todayTs)];
+        const tomorrowObj = tomorrowTs ? fact.data[String(tomorrowTs)] : null;
+
+        scheduleDataToday = todayObj ? findGroupData(todayObj) : null;
+        scheduleDataTomorrow = tomorrowObj ? findGroupData(tomorrowObj) : null;
+
+        if (scheduleDataToday) {
             renderGraph('today');
             renderGraph('tomorrow');
             startTimerLogic();
@@ -46,7 +50,7 @@ function findGroupData(obj) {
     if (!obj || typeof obj !== 'object') return null;
     if (obj['GPV4.1']) return obj['GPV4.1'];
     if (obj['4.1']) return obj['4.1'];
-    
+
     for (let key in obj) {
         const result = findGroupData(obj[key]);
         if (result) return result;
@@ -54,12 +58,12 @@ function findGroupData(obj) {
     return null;
 }
 
-// 2. Отрисовка графика (24 часа) — теперь принимает тип дня
+// 2. Отрисовка графика (24 часа) — принимает тип дня
 function renderGraph(dayType = 'today', allDayOn = false) {
     const gridId = dayType === 'today' ? 'scheduleGrid' : 'scheduleGridTomorrow';
     const grid = document.getElementById(gridId);
     if (!grid) return;
-    
+
     grid.innerHTML = '';
 
     const dataSource = dayType === 'today' ? scheduleDataToday : scheduleDataTomorrow;
@@ -73,12 +77,13 @@ function renderGraph(dayType = 'today', allDayOn = false) {
         const infoSpan = document.createElement('span');
         infoSpan.innerText = (i === 24 ? '00' : i.toString().padStart(2, '0'));
         info.appendChild(infoSpan);
-        
+
         const status = document.createElement('div');
         status.className = 'hour_status';
 
-        if (allDayOn) {
-            status.classList.add('hour_active');
+        if (allDayOn || !dataSource) {
+            // Если данных нет — рисуем серые часы (света нет / неизвестно)
+            status.style.backgroundColor = '#243b47';
         } else {
             const hourStatus = dataSource[i.toString()];
             if (hourStatus === 'yes') {
@@ -88,7 +93,7 @@ function renderGraph(dayType = 'today', allDayOn = false) {
             } else if (hourStatus === 'second') {
                 status.style.background = 'linear-gradient(to right, #ffd52d 50%, #243b47 50%)';
             } else {
-                status.style.backgroundColor = '#243b47'; 
+                status.style.backgroundColor = '#243b47';
             }
         }
 
@@ -98,13 +103,15 @@ function renderGraph(dayType = 'today', allDayOn = false) {
     }
 }
 
-// 3. Логика таймера и текста (остаётся без изменений, но использует scheduleDataToday)
+// 3. Логика таймера и текста (использует данные на сегодня)
 function startTimerLogic() {
+    if (!scheduleDataToday) return;
+
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    let jsonHour = currentHour + 1; 
-    
+    let jsonHour = currentHour + 1;
+
     let isCurrentlyOff = false;
     let nextEventHour = null;
     let nextEventMinute = 0;
@@ -124,13 +131,13 @@ function startTimerLogic() {
         const status = scheduleDataToday[(i + 1).toString()];
         if (!status) continue;
 
-        if (!isCurrentlyOff) { 
+        if (!isCurrentlyOff) {
             if (status === 'no' && i > currentHour) { nextEventHour = i; nextEventMinute = 0; break; }
             if (status === 'first' && i > currentHour) { nextEventHour = i; nextEventMinute = 0; break; }
             if (status === 'first' && i === currentHour && currentMinute < 30) { nextEventHour = i; nextEventMinute = 30; break; }
             if (status === 'second' && i > currentHour) { nextEventHour = i; nextEventMinute = 30; break; }
             if (status === 'second' && i === currentHour && currentMinute < 30) { nextEventHour = i; nextEventMinute = 30; break; }
-        } else { 
+        } else {
             if (status === 'yes' && i > currentHour) { nextEventHour = i; nextEventMinute = 0; break; }
             if (status === 'second' && i > currentHour) { nextEventHour = i; nextEventMinute = 0; break; }
             if (status === 'second' && i === currentHour && currentMinute < 30) { nextEventHour = i; nextEventMinute = 30; break; }
@@ -173,14 +180,14 @@ function startTimerLogic() {
     updateCountdown(targetDate);
 }
 
-// 4. Обратный отсчет
+// 4. Обратный отсчет (часы, минуты, секунды)
 function updateCountdown(targetDate) {
     const now = new Date();
     const diff = targetDate - now;
 
     if (diff <= 0) {
         clearInterval(timerInterval);
-        setTimeout(fetchSchedule, 5000); 
+        setTimeout(fetchSchedule, 5000);
         return;
     }
 
