@@ -63,12 +63,16 @@
                     </div>
                 </div>
             </div>
-
-            <!-- ГРАФІК -->
-            <h2 class="ch_day_title">График на сутки</h2>
             
-            <div class="scale_hours" id="scheduleGrid">
-                <!-- Сюди JS згенерує 24 колонки -->
+<!-- ГРАФИК НА СЕГОДНЯ -->
+<h2 class="ch_day_title">График на сегодня</h2>
+<div class="scale_hours" id="scheduleGrid"></div>
+
+<!-- ГРАФИК НА ЗАВТРА -->
+<div id="tomorrowBlock" style="display: none;">
+    <h2 class="ch_day_title">График на завтра</h2>
+    <div class="scale_hours" id="scheduleGridTomorrow"></div>
+</div>
             </div>
 
             <div class="scale_info" style="justify-content: center; gap: 20px; margin-top: 20px;">
