@@ -1,3 +1,4 @@
+// Берем данные из ОРИГИНАЛЬНОГО репозитория автора (Baskerville42)
 const API_URL = 'https://githubusercontent.com' + Date.now();
 
 let scheduleToday = {};
@@ -8,9 +9,6 @@ let timerInterval = null;
 async function fetchSchedule() {
     try {
         const response = await fetch(API_URL);
-        if (!response.ok) {
-            throw new Error(`HTTP ошибка: ${response.status}`);
-        }
         const data = await response.json();
         
         const parsed = parseSchedules(data);
@@ -24,7 +22,7 @@ async function fetchSchedule() {
             renderGraph('scheduleGrid', {}, true); 
         }
 
-        // Отрисовка графика на завтра
+        // Отрисовка графика на завтра, если он есть в JSON
         const tomorrowBlock = document.getElementById('tomorrowBlock');
         if (parsed.tomorrow && tomorrowBlock) {
             scheduleTomorrow = parsed.tomorrow;
@@ -35,16 +33,16 @@ async function fetchSchedule() {
         }
 
     } catch (error) {
-        console.error('Детали ошибки:', error);
+        console.error('Ошибка загрузки:', error);
         document.getElementById('timerStatusText').innerText = 'Ошибка сети';
     }
 }
 
-// Универсальный поиск всех дней для группы 4.1
+// Поиск всех дней для группы 4.1
 function parseSchedules(data) {
     let foundDays = [];
 
-    function search(obj, currentKey = '') {
+    function search(obj, currentKey) {
         if (!obj || typeof obj !== 'object') return;
         
         if (obj['GPV4.1'] || obj['4.1']) {
@@ -60,19 +58,23 @@ function parseSchedules(data) {
         }
     }
 
-    search(data);
-
-    // Сортируем найденные дни по возрастанию даты (timestamp)
-    foundDays.sort((a, b) => a.key - b.key);
+    search(data, '');
 
     if (foundDays.length === 0) {
         return { today: null, tomorrow: null };
     }
 
-    // Если найден 1 день — это сегодня; если 2 и больше — берём первый и второй
+    // Сортируем по дате (от меньшего timestamp к большему)
+    foundDays.sort(function(a, b) {
+        return a.key - b.key;
+    });
+
+    const firstDay = foundDays.at(0);
+    const secondDay = foundDays.at(1);
+
     return {
-        today: foundDays[0].schedule,
-        tomorrow: foundDays.length > 1 ? foundDays[1].schedule : null
+        today: firstDay ? firstDay.schedule : null,
+        tomorrow: secondDay ? secondDay.schedule : null
     };
 }
 
@@ -127,6 +129,7 @@ function startTimerLogic() {
     let nextEventHour = null;
     let nextEventMinute = 0;
 
+    // Проверяем, есть ли свет прямо сейчас
     const currentStatus = scheduleToday[jsonHour.toString()];
     if (currentStatus === 'no') {
         isCurrentlyOff = true;
@@ -136,6 +139,7 @@ function startTimerLogic() {
         isCurrentlyOff = true;
     }
 
+    // Ищем ближайшее событие
     for (let i = currentHour; i < 24; i++) {
         const status = scheduleToday[(i + 1).toString()];
         if (!status) continue;
@@ -189,7 +193,7 @@ function startTimerLogic() {
     updateCountdown(targetDate);
 }
 
-// 4. Обратный отсчет
+// 4. Обратный отсчет (часы, минуты, секунды)
 function updateCountdown(targetDate) {
     const now = new Date();
     const diff = targetDate - now;
