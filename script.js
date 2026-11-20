@@ -1,5 +1,5 @@
 // Берем данные из ОРИГИНАЛЬНОГО репозитория автора (Baskerville42)
-const API_URL = 'https://raw.githubusercontent.com/Baskerville42/outage-data-ua/main/data/kyiv-region.json?t=' + Date.now();
+const API_URL = 'https://githubusercontent.com' + Date.now();
 
 let scheduleData = {};
 let timerInterval = null;
@@ -10,38 +10,59 @@ async function fetchSchedule() {
         const response = await fetch(API_URL);
         const data = await response.json();
         
-        const groupData = findGroupData(data);
+        const allDays = findAllGroupData(data);
+        const todayData = allDays.shift();
+        const tomorrowData = allDays.shift();
 
-        if (groupData) {
-            scheduleData = groupData;
-            renderGraph();
+        if (todayData) {
+            scheduleData = todayData;
+            renderGraph('scheduleGrid', scheduleData);
             startTimerLogic();
         } else {
-            document.getElementById('timerStatusText').innerText = 'Дані не знайдені';
-            renderGraph(true); 
+            document.getElementById('timerStatusText').innerText = 'Данные не найдены';
+            renderGraph('scheduleGrid', {}, true); 
         }
+
+        // Отрисовка графика на завтра (если данных нет, передается пустой объект — квадраты будут серыми)
+        renderGraph('scheduleGridTomorrow', tomorrowData || {});
+
     } catch (error) {
-        console.error('Помилка завантаження:', error);
-        document.getElementById('timerStatusText').innerText = 'Помилка мережі';
+        console.error('Ошибка загрузки:', error);
+        document.getElementById('timerStatusText').innerText = 'Ошибка сети';
+        renderGraph('scheduleGridTomorrow', {});
     }
 }
 
-// Функция для поиска группы 4.1 на любой глубине JSON
-function findGroupData(obj) {
-    if (!obj || typeof obj !== 'object') return null;
-    if (obj['GPV4.1']) return obj['GPV4.1'];
-    if (obj['4.1']) return obj['4.1'];
-    
-    for (let key in obj) {
-        const result = findGroupData(obj[key]);
-        if (result) return result;
+// Функция для поиска всех дней группы 4.1 с сортировкой по дате (от сегодня к завтра)
+function findAllGroupData(rootObj) {
+    let found = [];
+
+    function traverse(obj, currentKey) {
+        if (!obj || typeof obj !== 'object') return;
+        
+        if (obj['GPV4.1']) {
+            found.push({ ts: Number(currentKey) || 0, data: obj['GPV4.1'] });
+            return;
+        }
+        if (obj['4.1']) {
+            found.push({ ts: Number(currentKey) || 0, data: obj['4.1'] });
+            return;
+        }
+        
+        for (let key in obj) {
+            traverse(obj[key], key);
+        }
     }
-    return null;
+
+    traverse(rootObj, '');
+    found.sort((a, b) => a.ts - b.ts);
+    return found.map(item => item.data);
 }
 
 // 2. Отрисовка графика (24 часа)
-function renderGraph(allDayOn = false) {
-    const grid = document.getElementById('scheduleGrid');
+function renderGraph(gridId, dayData, allDayOn = false) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
     grid.innerHTML = '';
 
     for (let i = 1; i <= 24; i++) {
@@ -60,7 +81,7 @@ function renderGraph(allDayOn = false) {
         if (allDayOn) {
             status.classList.add('hour_active');
         } else {
-            const hourStatus = scheduleData[i.toString()];
+            const hourStatus = dayData[i.toString()];
             if (hourStatus === 'yes') {
                 status.classList.add('hour_active');
             } else if (hourStatus === 'first') {
@@ -119,24 +140,23 @@ function startTimerLogic() {
         }
     }
 
-    const statusTextEl = document.getElementById('timerStatusText'); // Верхняя строка (span)
-    const nextTextEl = document.getElementById('timerNextText');     // Нижняя строка (b)
+    const statusTextEl = document.getElementById('timerStatusText');
+    const nextTextEl = document.getElementById('timerNextText');
     const timerBox = document.getElementById('timerBox');
 
-    // Формируем время (например, 17:30)
     let timeString = "";
     if (nextEventHour !== null) {
         timeString = `${nextEventHour.toString().padStart(2, '0')}:${nextEventMinute.toString().padStart(2, '0')}`;
     }
 
-    // Устанавливаем новые тексты
+    // Устанавливаем русские тексты
     if (isCurrentlyOff) {
-        nextTextEl.innerText = nextEventHour !== null ? `Світло з'явиться о ${timeString}` : 'Чекаємо на графік';
-        statusTextEl.innerText = 'Включення через:';
+        nextTextEl.innerText = nextEventHour !== null ? `Свет появится в ${timeString}` : 'Ожидаем график';
+        statusTextEl.innerText = 'Включение через:';
         timerBox.style.border = "2px solid #ffd52d";
     } else {
-        nextTextEl.innerText = nextEventHour !== null ? `Світло зникне о ${timeString}` : 'Більше відключень не буде';
-        statusTextEl.innerText = 'Відключення через:';
+        nextTextEl.innerText = nextEventHour !== null ? `Свет исчезнет в ${timeString}` : 'Больше отключений не будет';
+        statusTextEl.innerText = 'Отключение через:';
         timerBox.style.border = "2px solid #4dd58e";
     }
 
