@@ -1,4 +1,4 @@
-const API_URL = 'https://raw.githubusercontent.com/Ay4y0/Light_on-off/main/data/kyiv-region.json?t=' + Date.now();
+const API_URL = 'https://raw.githubusercontent.com/Baskerville42/outage-data-ua/main/data/kyiv-region.json?t=' + Date.now();
 
 let scheduleData = {};
 let timerInterval = null;
