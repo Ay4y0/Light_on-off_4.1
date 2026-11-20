@@ -1,6 +1,5 @@
 // Ссылка на ВАШ личный репозиторий с данными
 const API_URL = 'https://raw.githubusercontent.com/Ay4y0/Light_on-off/main/data/kyiv-region.json';
-const GROUP_ID = 'GPV4.1'; // Правильный ключ группы
 
 let scheduleData = {};
 let timerInterval = null;
@@ -11,13 +10,8 @@ async function fetchSchedule() {
         const response = await fetch(API_URL);
         const data = await response.json();
         
-        // Ищем данные для сегодняшнего дня внутри структуры fact -> data
-        const todayTimestamp = Object.keys(data.fact.data)[0]; // Берем первую доступную дату
-        if (!todayTimestamp) {
-            throw new Error('Немає даних на сьогодні');
-        }
-
-        const groupData = data.fact.data[todayTimestamp][GROUP_ID];
+        // Умный поиск данных вашей группы, где бы они ни лежали в файле
+        const groupData = findGroupData(data);
         
         if (groupData) {
             scheduleData = groupData;
@@ -25,13 +19,28 @@ async function fetchSchedule() {
             startTimerLogic();
         } else {
             document.getElementById('timerStatusText').innerText = 'Дані для вашої черги не знайдені';
-            // Рисуем пустой график, чтобы не было пустоты
-            renderGraph(true); 
+            renderGraph(true); // Рисуем пустой график, чтобы не было пустоты
         }
     } catch (error) {
         console.error('Помилка завантаження:', error);
         document.getElementById('timerStatusText').innerText = 'Помилка завантаження даних';
     }
+}
+
+// Функция для поиска группы 4.1 или GPV4.1 на любой глубине JSON
+function findGroupData(obj) {
+    if (!obj || typeof obj !== 'object') return null;
+    
+    // Если нашли ключ с названием группы
+    if (obj['GPV4.1']) return obj['GPV4.1'];
+    if (obj['4.1']) return obj['4.1'];
+    
+    // Рекурсивно ищем глубже
+    for (let key in obj) {
+        const result = findGroupData(obj[key]);
+        if (result) return result;
+    }
+    return null;
 }
 
 // 2. Отрисовка графика (24 часа)
@@ -151,7 +160,7 @@ function updateCountdown(targetDate, isCurrentlyOff) {
 
     if (diff <= 0) {
         clearInterval(timerInterval);
-        setTimeout(fetchSchedule, 5000);
+        setTimeout(fetchSchedule, 5000); // Перезапрашиваем данные через 5 секунд
         return;
     }
 
