@@ -66,13 +66,26 @@ body.dark header {
     text-decoration: none;
     color: inherit;
 }
+.logo_image {
+    display: flex;
+    flex-direction: column; /* Выстраиваем элементы друг под другом */
+    align-items: center;    /* Центрируем по горизонтали */
+    text-decoration: none;
+    color: inherit;
+    margin: 0 auto;
+}
+
 .logo_image img {
     width: 46px;
-    margin-right: 16px;
+    margin-right: 0;      /* Убираем отступ справа */
+    margin-bottom: 10px;  /* Добавляем отступ снизу, чтобы текст не прилипал к картинке */
 }
+
 .logo_text {
     display: flex;
     flex-direction: column;
+    align-items: center;  /* Центрируем текст */
+    text-align: center;   /* Текст по центру, если вдруг перенесется на новую строку */
 }
 .logo_big_text { font-size: 20px; font-weight: 700; }
 .logo_small_text { font-size: 16px; font-weight: 100; }
