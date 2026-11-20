@@ -6,16 +6,19 @@ let timerInterval = null;
 
 // 1. Загрузка данных
 async function fetchSchedule() {
+    // Сразу рисуем серый каркас для завтрашнего графика
+    renderGraph('scheduleGridTomorrow', {});
+
     try {
         const response = await fetch(API_URL);
         const data = await response.json();
         
-        const allDays = findAllGroupData(data);
-        const todayData = allDays.shift();
-        const tomorrowData = allDays.shift();
+        const days = findGroupDataList(data);
+        const groupData = days.shift();
+        const tomorrowData = days.shift();
 
-        if (todayData) {
-            scheduleData = todayData;
+        if (groupData) {
+            scheduleData = groupData;
             renderGraph('scheduleGrid', scheduleData);
             startTimerLogic();
         } else {
@@ -23,40 +26,34 @@ async function fetchSchedule() {
             renderGraph('scheduleGrid', {}, true); 
         }
 
-        // Отрисовка графика на завтра (если данных нет, передается пустой объект — квадраты будут серыми)
-        renderGraph('scheduleGridTomorrow', tomorrowData || {});
-
+        if (tomorrowData) {
+            renderGraph('scheduleGridTomorrow', tomorrowData);
+        }
     } catch (error) {
         console.error('Ошибка загрузки:', error);
         document.getElementById('timerStatusText').innerText = 'Ошибка сети';
-        renderGraph('scheduleGridTomorrow', {});
     }
 }
 
-// Функция для поиска всех дней группы 4.1 с сортировкой по дате (от сегодня к завтра)
-function findAllGroupData(rootObj) {
-    let found = [];
-
-    function traverse(obj, currentKey) {
+// Ваш исходный поиск, собирающий найденные дни в массив
+function findGroupDataList(rootObj) {
+    let list = [];
+    function search(obj) {
         if (!obj || typeof obj !== 'object') return;
-        
         if (obj['GPV4.1']) {
-            found.push({ ts: Number(currentKey) || 0, data: obj['GPV4.1'] });
+            list.push(obj['GPV4.1']);
             return;
         }
         if (obj['4.1']) {
-            found.push({ ts: Number(currentKey) || 0, data: obj['4.1'] });
+            list.push(obj['4.1']);
             return;
         }
-        
         for (let key in obj) {
-            traverse(obj[key], key);
+            search(obj[key]);
         }
     }
-
-    traverse(rootObj, '');
-    found.sort((a, b) => a.ts - b.ts);
-    return found.map(item => item.data);
+    search(rootObj);
+    return list;
 }
 
 // 2. Отрисовка графика (24 часа)
