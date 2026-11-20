@@ -1,5 +1,5 @@
 // Берем данные из ОРИГИНАЛЬНОГО репозитория автора (Baskerville42)
-const API_URL = 'https://raw.githubusercontent.com/Baskerville42/outage-data-ua/main/data/kyiv-region.json?t=' + Date.now();
+const API_URL = 'https://githubusercontent.com' + Date.now();
 
 let scheduleData = {};
 let timerInterval = null;
@@ -17,12 +17,12 @@ async function fetchSchedule() {
             renderGraph();
             startTimerLogic();
         } else {
-            document.getElementById('timerStatusText').innerText = 'Дані не знайдені';
+            document.getElementById('timerStatusText').innerText = 'Данные не найдены';
             renderGraph(true); 
         }
     } catch (error) {
-        console.error('Помилка завантаження:', error);
-        document.getElementById('timerStatusText').innerText = 'Помилка мережі';
+        console.error('Ошибка загрузки:', error);
+        document.getElementById('timerStatusText').innerText = 'Ошибка сети';
     }
 }
 
@@ -119,24 +119,23 @@ function startTimerLogic() {
         }
     }
 
-    const statusTextEl = document.getElementById('timerStatusText'); // Верхняя строка (span)
-    const nextTextEl = document.getElementById('timerNextText');     // Нижняя строка (b)
+    const statusTextEl = document.getElementById('timerStatusText');
+    const nextTextEl = document.getElementById('timerNextText');
     const timerBox = document.getElementById('timerBox');
 
-    // Формируем время (например, 17:30)
     let timeString = "";
     if (nextEventHour !== null) {
         timeString = `${nextEventHour.toString().padStart(2, '0')}:${nextEventMinute.toString().padStart(2, '0')}`;
     }
 
-    // Устанавливаем новые тексты
+    // Устанавливаем русские тексты
     if (isCurrentlyOff) {
-        nextTextEl.innerText = nextEventHour !== null ? `Світло з'явиться о ${timeString}` : 'Чекаємо на графік';
-        statusTextEl.innerText = 'Включення через:';
+        nextTextEl.innerText = nextEventHour !== null ? `Свет появится в ${timeString}` : 'Ожидаем график';
+        statusTextEl.innerText = 'Включение через:';
         timerBox.style.border = "2px solid #ffd52d";
     } else {
-        nextTextEl.innerText = nextEventHour !== null ? `Світло зникне о ${timeString}` : 'Більше відключень не буде';
-        statusTextEl.innerText = 'Відключення через:';
+        nextTextEl.innerText = nextEventHour !== null ? `Свет исчезнет в ${timeString}` : 'Больше отключений не будет';
+        statusTextEl.innerText = 'Отключение через:';
         timerBox.style.border = "2px solid #4dd58e";
     }
 
