@@ -128,12 +128,14 @@ body.dark header {
     font-size: 16px;
     color: #89a0a8;
     margin-bottom: 4px;
+    text-align: right;
 }
 .ch_timer_text b {
     display: block;
     font-size: 28px;
     font-weight: 500;
     color: #fff;
+    text-align: right;
 }
 
 .ch_timer_time {
