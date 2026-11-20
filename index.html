@@ -3,12 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Маєток 4.1</title>
-    <!-- Манифест для Android (полноэкранный режим и иконка) -->
-<link rel="manifest" href="manifest.json">
-
-<!-- Цвет верхней системной полоски (статус-бара) на Android -->
-<meta name="theme-color" content="#09232f">
+    <title>Маеток 4.1</title>
 
 <!-- Иконка SVG для вкладок браузера (Chrome, Firefox и др.) -->
 <link rel="icon" type="image/png" href="img/favicon.png">
@@ -17,7 +12,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
 
 <!-- Короткое название под иконкой на экране iPhone (до 12 символов) -->
-<meta name="apple-mobile-web-app-title" content="Маєток 4.1">
+<meta name="apple-mobile-web-app-title" content="Маеток 4.1">
 
 <!-- Включает полноэкранный режим без адресной строки Safari -->
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -34,13 +29,13 @@
                 <a href="#" class="logo_image">
                     <img src="img/logo_dark.svg" alt="Energy-UA" onerror="this.style.display='none'">
                     <span class="logo_text">
-                        <span class="logo_big_text">ЖК Київський маєток</span>
-                        <span class="logo_small_text">Черга 4.1</span>
+                        <span class="logo_big_text">ЖК Киевский маеток</span>
+                        <span class="logo_small_text">Группа 4.1</span>
                     </span>
                 </a>
                 <!-- Плашка справа полностью удалена -->
             </div>
-            <h1 class="main_header">Графік відключення <span>електроенергії</span></h1>
+            <h1 class="main_header">График отключения <span>электроэнергии</span></h1>
         </div>
     </header>
     <main>
@@ -50,16 +45,16 @@
                 <div class="ch_timer" id="timerBox">
                     <div class="ch_timer_text">
                         <b id="timerNextText">--:--</b>
-                        <span id="timerStatusText">Завантаження даних...</span>
+                        <span id="timerStatusText">Загрузка данных...</span>
                     </div>
                     <div class="ch_timer_time">
                         <div class="timer_hour">
                             <span class="timer_num" id="timerHours">00</span>
-                            <span class="timer_num_info">годин</span>
+                            <span class="timer_num_info">часов</span>
                         </div>
                         <div class="timer_min">
                             <span class="timer_num" id="timerMinutes">00</span>
-                            <span class="timer_num_info">хвилин</span>
+                            <span class="timer_num_info">минут</span>
                         </div>
                         <div class="timer_sec">
                             <span class="timer_num" id="timerSeconds">00</span>
@@ -70,7 +65,7 @@
             </div>
 
             <!-- ГРАФІК -->
-            <h2 class="ch_day_title">Добовий графік (24 години)</h2>
+            <h2 class="ch_day_title">График на сутки</h2>
             
             <div class="scale_hours" id="scheduleGrid">
                 <!-- Сюди JS згенерує 24 колонки -->
@@ -78,10 +73,10 @@
 
             <div class="scale_info" style="justify-content: center; gap: 20px; margin-top: 20px;">
                 <div class="periods_items">
-                    <span><i class="legend-on" style="background:#ffd52d;"></i> Є світло</span>
+                    <span><i class="legend-on" style="background:#ffd52d;"></i> Есть свет :)</span>
                 </div>
                 <div class="periods_items">
-                    <span><i class="legend-off" style="background:#66738b;"></i> Немає світла</span>
+                    <span><i class="legend-off" style="background:#66738b;"></i> Нет света :(</span>
                 </div>
             </div>
         </div>
