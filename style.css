@@ -229,6 +229,11 @@ body.dark header {
     margin-right: 6px;
 }
 
+/* Увеличиваем отступ перед заголовком "График на завтра" */
+.scale_hours + .ch_day_title {
+    margin-top: 30px; /* Можете изменить это значение на нужное (например, 100px) */
+}
+
 /* Адаптивность для мобильных */
 @media (max-width: 768px) {
     .container { width: 95%; }
