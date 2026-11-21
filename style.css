@@ -243,7 +243,7 @@ body.dark header {
     /* ДОБАВЛЕНО: Уменьшаем заголовок графика для телефонов */
     .ch_day_title { 
         font-size: 20px; 
-        margin: 25px 0 15px; 
+        margin: 25px 0 8px; 
         line-height: 1.3;
     }
 
