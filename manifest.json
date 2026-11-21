@@ -1,7 +1,7 @@
 {
   "name": "Маєток_4.1",
   "short_name": "Маєток_4.1",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#09232f",
   "theme_color": "#09232f",
