@@ -13,7 +13,7 @@ async function fetchSchedule() {
 
         const fact = data.fact;
         if (!fact || !fact.data) {
-            document.getElementById('timerStatusText').innerText = 'Дані не знайдені';
+            document.getElementById('timerStatusText').innerText = 'Данные не найдены';
             renderGraph('today', true);
             renderGraph('tomorrow', true);
             return;
@@ -35,13 +35,13 @@ async function fetchSchedule() {
             renderGraph('tomorrow');
             startTimerLogic();
         } else {
-            document.getElementById('timerStatusText').innerText = 'Дані не знайдені';
+            document.getElementById('timerStatusText').innerText = 'Данные не найдены';
             renderGraph('today', true);
             renderGraph('tomorrow', true);
         }
     } catch (error) {
         console.error('Помилка завантаження:', error);
-        document.getElementById('timerStatusText').innerText = 'Помилка мережі';
+        document.getElementById('timerStatusText').innerText = 'Ошибка сети';
     }
 }
 
@@ -156,12 +156,12 @@ function startTimerLogic() {
     }
 
     if (isCurrentlyOff) {
-        nextTextEl.innerText = nextEventHour !== null ? `Світло з'явиться о ${timeString}` : 'Чекаємо на графік';
-        statusTextEl.innerText = 'Включення через:';
+        nextTextEl.innerText = nextEventHour !== null ? `Свет включат в ${timeString}` : 'Чекаємо на графік';
+        statusTextEl.innerText = 'Включение через:';
         timerBox.style.border = "2px solid #ffd52d";
     } else {
-        nextTextEl.innerText = nextEventHour !== null ? `Світло зникне о ${timeString}` : 'Більше відключень не буде';
-        statusTextEl.innerText = 'Відключення через:';
+        nextTextEl.innerText = nextEventHour !== null ? `Свет выключат в ${timeString}` : 'Більше відключень не буде';
+        statusTextEl.innerText = 'Отключение через:';
         timerBox.style.border = "2px solid #4dd58e";
     }
 
